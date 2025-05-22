@@ -3,6 +3,7 @@ const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
 const ffmpeg = require("fluent-ffmpeg");
+const mime = require("mime");
 
 const app = express();
 const PORT = 4444;
@@ -10,18 +11,29 @@ const PORT = 4444;
 app.set("view engine", "ejs");
 app.use(express.urlencoded({ extended: true }));
 
-// Static folders
-app.use("/videos", express.static(path.join(__dirname, "public", "videos")));
+// Define MKV MIME type explicitly
+mime.define({ "video/x-matroska": ["mkv"] }, true);
+
+// Serve videos with proper Content-Type to prevent download
+app.use("/videos", (req, res, next) => {
+  const filePath = path.join(__dirname, "public", "videos", req.path);
+  if (fs.existsSync(filePath)) {
+    const type = mime.getType(filePath) || "application/octet-stream";
+    res.type(type);
+    res.sendFile(filePath);
+  } else {
+    next();
+  }
+});
+
+// Serve thumbnails & static assets normally
 app.use(
   "/thumbnails",
   express.static(path.join(__dirname, "public", "thumbnails"))
 );
 app.use(express.static(path.join(__dirname, "public")));
 
-// Allowed video extensions
-const allowedExtensions = [".mp4", ".mkv", ".webm", ".mov", ".avi"];
-
-// Multer setup for uploads with 10GB limit
+// Multer storage config
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, "./public/videos"),
   filename: (req, file, cb) => {
@@ -30,90 +42,86 @@ const storage = multer.diskStorage({
     cb(null, baseName + "-" + Date.now() + ext);
   },
 });
+
+// Upload config: max 10GB, allow mkv, mp4, webm, mov, avi
 const upload = multer({
   storage,
-  limits: { fileSize: 10 * 1024 * 1024 * 1024 }, // 10GB max
+  limits: { fileSize: 10 * 1024 * 1024 * 1024 }, // 10GB
   fileFilter: (req, file, cb) => {
-    const ext = path.extname(file.originalname).toLowerCase();
-    if (file.mimetype.startsWith("video/") && allowedExtensions.includes(ext)) {
-      cb(null, true);
-    } else {
-      cb(
-        new Error(
-          "Only video files with extensions mp4, mkv, webm, mov, avi are allowed!"
-        )
-      );
-    }
+    const allowedMimes = [
+      "video/mp4",
+      "video/x-matroska", // mkv
+      "video/webm",
+      "video/quicktime",
+      "video/x-msvideo",
+    ];
+    if (allowedMimes.includes(file.mimetype)) cb(null, true);
+    else cb(new Error("Only video files (mp4, mkv, webm, mov, avi) allowed!"));
   },
 });
 
-// Helper: get all videos info (filename, url, thumbnail)
+// Get all videos info to render homepage
 function getVideos() {
   const videoDir = path.join(__dirname, "public", "videos");
   const thumbnailDir = path.join(__dirname, "public", "thumbnails");
 
   if (!fs.existsSync(videoDir)) return [];
 
-  const files = fs.readdirSync(videoDir);
-  const videos = files
-    .filter((f) => allowedExtensions.includes(path.extname(f).toLowerCase()))
-    .map((filename) => {
-      const name = filename
-        .replace(/[-_]\d+$/, "")
-        .replace(path.extname(filename), "");
-      const thumbnailPath = path.join(thumbnailDir, filename + ".png");
-      const thumbnailExists = fs.existsSync(thumbnailPath);
+  const files = fs
+    .readdirSync(videoDir)
+    .filter((f) => /\.(mp4|mkv|webm|mov|avi)$/i.test(f));
 
-      return {
-        filename,
-        name,
-        url: "/videos/" + filename,
-        thumbnail: thumbnailExists
-          ? "/thumbnails/" + filename + ".png"
-          : "/fallback-thumbnail.png",
-      };
-    });
-  return videos;
+  return files.map((filename) => {
+    const name = filename
+      .replace(/[-_]\d+$/, "")
+      .replace(path.extname(filename), "");
+    const thumbnailPath = path.join(thumbnailDir, filename + ".png");
+    const thumbnailExists = fs.existsSync(thumbnailPath);
+
+    return {
+      filename,
+      name,
+      url: "/videos/" + filename,
+      thumbnail: thumbnailExists
+        ? "/thumbnails/" + filename + ".png"
+        : "/fallback-thumbnail.png",
+    };
+  });
 }
 
-// Home page: show upload form + videos grid
+// Homepage route
 app.get("/", (req, res) => {
   const videos = getVideos();
   res.render("index", { videos });
 });
 
-// Upload handler
+// Upload route
 app.post("/upload", upload.single("video"), (req, res) => {
   if (!req.file) return res.status(400).send("No video uploaded");
 
   const videoPath = req.file.path;
-  const thumbnailPath = path.join(
-    __dirname,
-    "public",
-    "thumbnails",
-    req.file.filename + ".png"
-  );
+  const thumbnailDir = path.join(__dirname, "public", "thumbnails");
+  if (!fs.existsSync(thumbnailDir)) fs.mkdirSync(thumbnailDir);
 
-  // Generate thumbnail
+  // Generate thumbnail (1 screenshot 320x240)
   ffmpeg(videoPath)
     .screenshots({
       count: 1,
-      folder: path.join(__dirname, "public", "thumbnails"),
+      folder: thumbnailDir,
       filename: req.file.filename + ".png",
       size: "320x240",
     })
     .on("end", () => {
-      console.log("Thumbnail created:", thumbnailPath);
-      res.redirect("/");
+      res.status(200).send("Upload successful");
     })
     .on("error", (err) => {
-      console.error("Error creating thumbnail:", err);
-      res.redirect("/");
+      console.error("Thumbnail error:", err);
+      res.status(200).send("Upload successful (thumbnail failed)");
     });
 });
 
-// Delete video and thumbnail
-app.post("/delete", (req, res) => {
+// Delete route
+app.post("/delete", express.urlencoded({ extended: true }), (req, res) => {
   const { filename } = req.body;
   if (!filename) return res.status(400).send("Missing filename");
 
@@ -125,17 +133,12 @@ app.post("/delete", (req, res) => {
     filename + ".png"
   );
 
-  if (fs.existsSync(videoPath)) {
-    fs.unlinkSync(videoPath);
-  }
-
-  if (fs.existsSync(thumbnailPath)) {
-    fs.unlinkSync(thumbnailPath);
-  }
+  if (fs.existsSync(videoPath)) fs.unlinkSync(videoPath);
+  if (fs.existsSync(thumbnailPath)) fs.unlinkSync(thumbnailPath);
 
   res.redirect("/");
 });
 
 app.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}`);
+  console.log(`Server running on http://localhost:${PORT}`);
 });
