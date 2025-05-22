@@ -8,7 +8,208 @@
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="/style.css" />
+    <style>
+      /* Reset & base */
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        min-height: 100vh;
+        color: #fff;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 30px 20px;
+      }
+
+      header {
+        margin-bottom: 30px;
+        text-align: center;
+        text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+      }
+      header h1 {
+        font-weight: 800;
+        font-size: 3rem;
+        letter-spacing: 2px;
+      }
+
+      main {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 25px 30px 40px;
+        border-radius: 16px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+        width: 100%;
+        max-width: 1100px;
+      }
+
+      form#uploadForm {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 30px;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+
+      form#uploadForm input[type="file"] {
+        flex: 1 1 300px;
+        padding: 10px;
+        border-radius: 12px;
+        border: none;
+        cursor: pointer;
+        font-weight: 600;
+        background: rgba(255 255 255 / 0.8);
+        color: #333;
+        transition: box-shadow 0.3s ease;
+      }
+      form#uploadForm input[type="file"]:hover,
+      form#uploadForm input[type="file"]:focus {
+        box-shadow: 0 0 10px #b2b2ff;
+        outline: none;
+      }
+
+      form#uploadForm button {
+        background: #8a2be2;
+        border: none;
+        color: white;
+        font-weight: 700;
+        padding: 12px 28px;
+        font-size: 1.1rem;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: background 0.3s ease;
+        box-shadow: 0 6px 14px rgba(138, 43, 226, 0.6);
+      }
+      form#uploadForm button:hover {
+        background: #6f22c9;
+        box-shadow: 0 8px 20px rgba(111, 34, 201, 0.8);
+      }
+
+      #progressContainer {
+        width: 100%;
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 12px;
+        overflow: hidden;
+        margin-bottom: 30px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        user-select: none;
+        font-weight: 700;
+        color: #fff;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.4);
+      }
+      #progressBar {
+        height: 100%;
+        width: 0;
+        background: #6a4fdb;
+        border-radius: 12px 0 0 12px;
+        transition: width 0.3s ease;
+        box-shadow: 0 0 8px #9c82ff;
+      }
+      #progressPercent {
+        margin-left: 10px;
+        min-width: 50px;
+        text-align: center;
+      }
+
+      .videos-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 30px;
+      }
+
+      .card {
+        background: rgba(255, 255, 255, 0.15);
+        border-radius: 20px;
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        cursor: pointer;
+      }
+      .card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 20px 40px rgba(106, 79, 219, 0.8);
+      }
+
+      .card a {
+        text-decoration: none;
+        color: inherit;
+        width: 100%;
+      }
+
+      .card img {
+        width: 100%;
+        aspect-ratio: 16 / 9;
+        object-fit: cover;
+        border-bottom: 3px solid #8a2be2;
+        transition: transform 0.3s ease;
+      }
+      .card:hover img {
+        transform: scale(1.05);
+      }
+
+      .card p {
+        font-weight: 700;
+        font-size: 1.15rem;
+        padding: 15px 10px;
+        text-align: center;
+        user-select: none;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        color: #f0e9ff;
+      }
+
+      .delete-form {
+        margin-bottom: 12px;
+        width: 100%;
+        display: flex;
+        justify-content: center;
+      }
+      .delete-form button {
+        background: transparent;
+        border: none;
+        color: #ff4c4c;
+        font-size: 1.5rem;
+        cursor: pointer;
+        padding: 6px 10px;
+        border-radius: 12px;
+        transition: background 0.3s ease, color 0.3s ease;
+      }
+      .delete-form button:hover {
+        background: #ff4c4c;
+        color: white;
+        box-shadow: 0 0 8px #ff4c4caa;
+      }
+
+      p.no-videos {
+        font-size: 1.25rem;
+        font-weight: 600;
+        text-align: center;
+        color: #ddd;
+        grid-column: 1 / -1;
+      }
+
+      @media (max-width: 600px) {
+        header h1 {
+          font-size: 2.2rem;
+        }
+        form#uploadForm input[type="file"] {
+          flex: 1 1 100%;
+        }
+        form#uploadForm button {
+          flex: 1 1 100%;
+        }
+      }
+    </style>
   </head>
   <body>
     <header>
@@ -25,7 +226,7 @@
         <input
           type="file"
           name="video"
-          accept=".mp4, .mkv, .webm, .mov, .avi, video/*"
+          accept="video/mp4,video/x-matroska,video/webm,video/quicktime,video/x-msvideo"
           required
         />
         <button type="submit">Upload Video</button>
@@ -38,7 +239,7 @@
 
       <div class="videos-grid">
         <% if (videos.length === 0) { %>
-        <p>No videos uploaded yet.</p>
+        <p class="no-videos">No videos uploaded yet.</p>
         <% } %> <% videos.forEach(video => { %>
         <div class="card">
           <a href="<%= video.url %>" target="_blank" rel="noopener noreferrer">
@@ -95,7 +296,7 @@
             const percent = Math.round((e.loaded / e.total) * 100);
             progressBar.style.width = percent + "%";
             progressPercent.textContent = percent + "%";
-            progressContainer.style.display = "block";
+            progressContainer.style.display = "flex";
           }
         };
 
