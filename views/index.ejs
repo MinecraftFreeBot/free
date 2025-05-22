@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Move Store - Videos</title>
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <header>
+      <h1>Move Store</h1>
+    </header>
+
+    <main>
+      <form
+        id="uploadForm"
+        action="/upload"
+        method="POST"
+        enctype="multipart/form-data"
+      >
+        <input type="file" name="video" accept="video/*" required />
+        <button type="submit">Upload Video</button>
+      </form>
+
+      <div id="progressContainer" style="display: none">
+        <div id="progressBar"></div>
+        <span id="progressPercent">0%</span>
+      </div>
+
+      <div class="videos-grid">
+        <% if (videos.length === 0) { %>
+        <p>No videos uploaded yet.</p>
+        <% } %> <% videos.forEach(video => { %>
+        <div class="card">
+          <a href="<%= video.url %>" target="_blank" rel="noopener noreferrer">
+            <img
+              src="<%= video.thumbnail %>"
+              alt="<%= video.name %>"
+              onerror="this.src='/fallback-thumbnail.png'"
+            />
+            <p><%= video.name %></p>
+          </a>
+
+          <form
+            class="delete-form"
+            action="/delete"
+            method="POST"
+            onsubmit="return confirm('Delete this video?');"
+          >
+            <input
+              type="hidden"
+              name="filename"
+              value="<%= video.filename %>"
+            />
+            <button type="submit" title="Delete video">
+              <i class="fa fa-trash"></i>
+            </button>
+          </form>
+        </div>
+        <% }) %>
+      </div>
+    </main>
+
+    <script>
+      const uploadForm = document.getElementById("uploadForm");
+      const progressContainer = document.getElementById("progressContainer");
+      const progressBar = document.getElementById("progressBar");
+      const progressPercent = document.getElementById("progressPercent");
+
+      uploadForm.addEventListener("submit", function (e) {
+        e.preventDefault();
+
+        const fileInput = this.querySelector('input[type="file"]');
+        if (!fileInput.files.length)
+          return alert("Please select a video to upload.");
+
+        const formData = new FormData();
+        formData.append("video", fileInput.files[0]);
+
+        const xhr = new XMLHttpRequest();
+
+        xhr.open("POST", "/upload", true);
+
+        xhr.upload.onprogress = function (e) {
+          if (e.lengthComputable) {
+            const percent = Math.round((e.loaded / e.total) * 100);
+            progressBar.style.width = percent + "%";
+            progressPercent.textContent = percent + "%";
+            progressContainer.style.display = "block";
+          }
+        };
+
+        xhr.onload = function () {
+          if (xhr.status === 200) {
+            window.location.reload();
+          } else {
+            alert("Upload failed: " + xhr.responseText);
+            progressContainer.style.display = "none";
+          }
+        };
+
+        xhr.onerror = function () {
+          alert("Upload error.");
+          progressContainer.style.display = "none";
+        };
+
+        xhr.send(formData);
+      });
+    </script>
+  </body>
+</html>
