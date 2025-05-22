@@ -1,0 +1,164 @@
+/* Reset and Base */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(to bottom, #0d1b2a, #1b263b);
+  color: #cbd5e1;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header */
+header {
+  background: linear-gradient(90deg, #3a86ff, #0077ff);
+  color: white;
+  text-align: center;
+  padding: 20px 0;
+  font-size: 2.5rem;
+  font-weight: bold;
+  box-shadow: 0 0 20px rgba(58, 134, 255, 0.5);
+  text-shadow: 1px 1px 2px #000;
+}
+
+/* Main Container */
+main {
+  flex: 1;
+  padding: 2rem;
+  max-width: 1300px;
+  margin: auto;
+}
+
+/* Upload Form */
+form#uploadForm {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 1.8rem;
+  background: #1e293b;
+  padding: 15px;
+  border-radius: 12px;
+  box-shadow: 0 0 10px #3a86ff;
+}
+
+input[type="file"] {
+  flex: 1;
+  padding: 10px;
+  border-radius: 8px;
+  background-color: #0f172a;
+  border: 1px solid #3a86ff;
+  color: #e2e8f0;
+}
+
+button {
+  background: linear-gradient(90deg, #60a5fa, #3b82f6);
+  color: white;
+  font-weight: bold;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  box-shadow: 0 0 10px #3a86ff;
+  cursor: pointer;
+  transition: background 0.3s, transform 0.2s;
+}
+
+button:hover {
+  background: #93c5fd;
+  transform: scale(1.05);
+}
+
+/* Progress Bar */
+#progressContainer {
+  width: 100%;
+  height: 22px;
+  background: #0f172a;
+  border-radius: 10px;
+  overflow: hidden;
+  position: relative;
+  box-shadow: inset 0 0 6px #3a86ff;
+  margin-top: 10px;
+}
+
+#progressBar {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(to right, #60a5fa, #3b82f6);
+  transition: width 0.4s ease;
+}
+
+#progressPercent {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  color: white;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+/* Video Grid */
+.videos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 20px;
+}
+
+/* Video Card */
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 0 15px rgba(58, 134, 255, 0.2);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 0 20px rgba(58, 134, 255, 0.5);
+}
+
+.card img {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+  border-bottom: 1px solid #60a5fa;
+}
+
+.card p {
+  padding: 12px;
+  text-align: center;
+  font-weight: bold;
+  font-size: 1rem;
+  color: #bfdbfe;
+  background-color: #0f172a;
+  border-top: 1px solid #334155;
+}
+
+/* Delete Button */
+.delete-form {
+  display: flex;
+  justify-content: center;
+  padding: 10px;
+  background: #1e293b;
+}
+
+.delete-form button {
+  background: none;
+  border: none;
+  color: #ef4444;
+  font-size: 20px;
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+.delete-form button:hover {
+  color: #f87171;
+}
